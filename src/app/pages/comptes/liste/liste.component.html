@@ -20,12 +20,22 @@
                             </div>
                         </div>
                         <div class="col-sm">
-                            <div class="d-flex justify-content-sm-end">
+                            <div class="d-flex">
                                 <div class="search-box ms-2">
-                                    <input type="text" class="form-control search" placeholder="Search..." >
+                                    <input type="text" class="form-control search" placeholder="Search..." [(ngModel)]="searchQuery" (input)="digitFilter()">
                                     <i class="ri-search-line search-icon"></i>
                                 </div>
+                                <div class="search-box ms-2">
+                                    <select name="" id="" class="form-control search"  [(ngModel)]="selectedStatus" (change)="searchStatus()">
+                                        <option value="" selected>Selectionnez un statut</option>
+                                        <option value="true">Active</option>
+                                        <option value="false">Inactive</option>
+                                    </select>
+                                    <i class="ri-search-line search-icon"></i>
+                                </div>
+                                
                             </div>
+                            
                         </div>
                     </div>
 
@@ -51,7 +61,7 @@
                                 </tr>
                             </thead>
                             <tbody class="list form-check-all">
-                                <tr *ngFor="let data of comptes;let i = index;" id="a_{{data.id}}">
+                                <tr *ngFor="let data of comptes;let i = index;" id="compte_{{data.id}}">
                                     <th scope="row">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" name="chk_child" value="{{data.id}}" >
@@ -76,7 +86,7 @@
                                                 <button disabled class="btn btn-sm btn-success edit-item-btn"><i class="ph-pen"></i></button>
                                             </div>
                                             <div  class="remove">
-                                                <button disabled class="btn btn-sm btn-danger remove-item-btn" ><i class="ph-trash"></i></button>
+                                                <button class="btn btn-sm btn-danger remove-item-btn" (click)="openDeleteCompteModal(data.id)"><i class="ph-trash"></i></button>
                                             </div>
                                             <div class="updateABonnement">
                                                 <button class="btn btn-sm btn-warning remove-item-btn" (click)="openSubscriptionModal(data.id)" ><i class="ph-user-switch"></i> Reconduire</button>
@@ -85,6 +95,7 @@
                                     </td>
                                 </tr>
                             </tbody>
+                            
                         </table>
                         <div class="noresult" [ngClass]="(comptes.length != 0)?'d-none':''">
                             <div class="text-center">
@@ -93,6 +104,7 @@
                                 <p class="text-muted mb-0">Aucune donnée ne correspond à votre recherche.</p>
                             </div>
                         </div>
+                        <span class="bg-primary p-2 text-light"><b><i>Total des comptes : {{AllComptes.length}}</i></b></span>
                     </div>
 
                     <div class="d-flex justify-content-end">
@@ -110,7 +122,7 @@
 </div>
 <!-- end row -->
 
-<div bsModal #showSubscriptionModal="bs-modal" class="modal fade" id="showSubscriptionModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" (onHide)="handler('onHide',$event)">
+<div bsModal #showSubscriptionModal="bs-modal" class="modal fade" id="showSubscriptionModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" (onHide)="hideSubscriptionModalAction('onHide',$event)">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-light p-3">
@@ -162,5 +174,35 @@
                 </div>
             </form>
         </div>
+    </div>
+</div>
+
+<!-- removeItemModal -->
+<div bsModal #deleteCompteModal="bs-modal" class="modal fade" (onHide)="hideDeleteCompteModalAction('onHide', $event)">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" id="btn-close"
+                    (click)="deleteCompteModal.hide()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <div class="text-danger">
+                        <i class="bi bi-trash3 display-5"></i>
+                    </div>
+                    <div class="mt-3">
+                        <h4>êtes vous sûr?</h4>
+                        <p class="text-muted mx-4 mb-0">Voulez vous vraiment supprimer ce compte ?</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center mt-4 me-2 mb-1">
+                    <button type="button" class="btn w-sm mb-1 btn-success" data-bs-dismiss="modal"
+                        (click)="deleteSelectedCompte()">Oui, Je supprime!</button>
+                    <button type="button" class="btn w-sm btn-danger mb-1 " id="delete-product"
+                        (click)="deleteCompteModal.hide()">Fermer</button>
+
+                </div>
+            </div>
+        </div><!-- /.modal-content -->
     </div>
 </div>

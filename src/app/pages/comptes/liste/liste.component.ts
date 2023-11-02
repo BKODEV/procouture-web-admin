@@ -5,7 +5,7 @@ import { PageChangedEvent } from 'ngx-bootstrap/pagination';
 import { ModalDirective } from 'ngx-bootstrap/modal';
 import { FormBuilder, Validators } from '@angular/forms';
 import { FormuleAbonnementService } from './formule-abonnement.service';
-import { HttpResponse } from '@angular/common/http';
+import Swal from 'sweetalert2';
 @Component({
   selector: 'app-liste',
   templateUrl: './liste.component.html',
@@ -13,7 +13,8 @@ import { HttpResponse } from '@angular/common/http';
 })
 export class ListeComponent implements OnInit {
 
-  @ViewChild(ModalDirective, { static: false }) showSubscriptionModal?: ModalDirective;
+  @ViewChild('showSubscriptionModal', { static: false }) showSubscriptionModal?: ModalDirective;
+  @ViewChild('deleteCompteModal', { static: false }) deleteCompteModal?: ModalDirective;
   @ViewChild('offre', { static: false }) selectElement ?: ElementRef;
 
   // bread crumb items
@@ -34,18 +35,24 @@ export class ListeComponent implements OnInit {
   showBoundaryLinks: boolean = true;
   showDirectionLinks: boolean = true;
 
+  //Message d'alerte de la page
+  alertMessage = "";
 
   AllComptes: any[] = [];
   comptes : any[] = []
+  
+  //pagination state
   state = {
     totalItem : this.AllComptes.length,
     itemPerPage : 10
   }
+
   formules : any[] = []
   selectedFormule : any
   selectedFormuleOptionIndex: number | null = null;
   paginationCurrentPage = 1;
-
+  selectedCompteForDeleting : number | null = null;
+  
   
   CompteFormGroupSubmited : boolean = false
   
@@ -54,6 +61,9 @@ export class ListeComponent implements OnInit {
     compte : ['', [Validators.required, Validators.pattern(/^[1-9]\d*$/)]],
   })
    
+  //variable de filtre formulaire
+  selectedStatus = "";
+  searchQuery = "";
 
   ngOnInit(): void {
       // Souscrivez-vous à l'observable dans le service pour obtenir les données
@@ -66,19 +76,38 @@ export class ListeComponent implements OnInit {
     // Chargez les données dès que le composant est initialisé
     this.compteListService.fetchComptesList();
   }
-  //Modal handler 
-  handler(type : string, event : ModalDirective){
-    //renitialiser les formules choisies
-    this.selectedFormule = null
-    this.CompteFormGroup.patchValue({formule : '', compte : ''})
-  }
+  
 
   //Changement de page pour la pagination
   tablepageChanged(event: PageChangedEvent): void {
     const startItem = (event.page - 1) * event.itemsPerPage;
     const endItem = event.page * event.itemsPerPage;
-      this.comptes = this.AllComptes.slice(startItem, endItem);
+    if(this.selectedStatus === ""){
+      this.paginationCurrentPage = 1
+      this.comptes = this.AllComptes.slice(startItem,endItem)
       this.state.totalItem = this.AllComptes.length; // Mettez à jour totalItem
+    }else {
+      
+      this.paginationCurrentPage = 1
+      var smallCompte = this.AllComptes.filter( (abonnement_item) => {
+        return abonnement_item.abonnement_status === JSON.parse(this.selectedStatus);
+      })
+      this.comptes = smallCompte.slice(startItem,endItem)
+      this.state.totalItem = smallCompte.length
+      console.log(this.comptes);
+    }
+      // this.comptes = this.AllComptes.slice(startItem, endItem);
+      // this.state.totalItem = this.AllComptes.length; // Mettez à jour totalItem
+  }
+  //Modal handler 
+  hideSubscriptionModalAction(type : string, event : ModalDirective){
+    //renitialiser les formules choisies
+    this.selectedFormule = null
+    this.CompteFormGroup.patchValue({formule : '', compte : ''})
+  }
+  hideDeleteCompteModalAction(type : string, event : ModalDirective){
+    //renitialiser les formules choisies
+    this.selectedCompteForDeleting = null
   }
 
   openSubscriptionModal(id : any){
@@ -88,6 +117,51 @@ export class ListeComponent implements OnInit {
       })
       this.CompteFormGroup.get('compte')?.setValue(id)
       this.showSubscriptionModal?.show()
+  }
+
+  //Ouverture de modale de confirmation de suppression
+  openDeleteCompteModal(id : number){
+      this.selectedCompteForDeleting = id;
+      this.deleteCompteModal?.show()
+  }
+
+  //FOnction de suppression de compte
+  deleteSelectedCompte(){
+    if(this.selectedCompteForDeleting === null){
+      //MAJ du message d'alerte en cas d'erreur
+      this.alertMessage = "Une erreur innatendue est survenue, veuillez ressayer !!!"
+      //affichage du message d'alert
+      this.msgAlert('warning', this.alertMessage)
+    }else{
+      this.compteListService.deleteCompte(this.selectedCompteForDeleting)
+      .subscribe(
+        (response) => {
+          if(response.ok){
+            
+            //recupérer les information du compte precedent
+            var deletedCompte = this.AllComptes.find( (compte) => compte.id === this.selectedCompteForDeleting)
+            //Supprimer la ligne dudit compte
+            this.supprimerLigneParId("compte_" + deletedCompte.id)
+            //rénitialisé la varieble de compte selectionné
+            this.selectedCompteForDeleting = null;
+            //Mettre à jour le message d'alerte
+            this.alertMessage = "le compte <small class='text-danger'>" + deletedCompte.email + "</small> à été supprimé !!!"
+            //afficher une alerte
+            this.msgAlert('success', this.alertMessage)
+            this.deleteCompteModal?.hide()
+            
+          }else{
+            //MAJ du message d'alerte en cas d'erreur
+            this.alertMessage = "Une erreur innatendue est survenue !!!"
+            //affichage du message d'alert
+            this.msgAlert('error', this.alertMessage)
+            this.deleteCompteModal?.hide()
+          }
+        }
+      )
+      
+    }
+
   }
   
   //changement de valeur du select des offres
@@ -121,4 +195,81 @@ export class ListeComponent implements OnInit {
     }
   }
 
+  searchStatus (){
+    this.searchQuery = "";
+    if(this.selectedStatus === ""){
+      this.paginationCurrentPage = 1
+      this.comptes = this.AllComptes.slice(0,(this.state.itemPerPage))
+      this.state.totalItem = this.AllComptes.length; // Mettez à jour totalItem
+    }else {
+      console.log(JSON.parse(this.selectedStatus));
+      this.paginationCurrentPage = 1
+      var smallCompte = this.AllComptes.filter( (abonnement_item) => {
+        return abonnement_item.abonnement_status === JSON.parse(this.selectedStatus);
+      })
+      this.comptes = smallCompte.slice(0,(this.state.itemPerPage))
+      this.state.totalItem = smallCompte.length
+    }
+    
+  }
+
+  searchObjects(array : any[], searchQuery : string) {
+    // Convert la recherche en minuscules (pour la recherche insensible à la casse)
+    const query = searchQuery.toLowerCase();
+    
+    // Filtrer les objets qui contiennent la recherche dans l'un de leurs champs
+    return array.filter(obj => {
+        for (const key in obj) {
+            if (typeof obj[key] === 'string' && obj[key].toLowerCase().includes(query)) {
+                return true;
+            }
+            if (typeof obj[key] === 'object') {
+                const nestedResult = this.searchObjects([obj[key]], searchQuery);
+                if (nestedResult.length > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    });
+  }
+
+  digitFilter(){
+    var elements = this.searchObjects(this.AllComptes, this.searchQuery);
+    if(this.selectedStatus === ""){
+      this.paginationCurrentPage = 1
+      this.comptes = elements.slice(0,(this.state.itemPerPage))
+      this.state.totalItem = elements.length; // Mettez à jour totalItem
+    }else {
+      this.paginationCurrentPage = 1
+      var smallCompte = elements.filter( (abonnement_item) => {
+        return abonnement_item.abonnement_status === JSON.parse(this.selectedStatus);
+      })
+      this.comptes = smallCompte.slice(0,(this.state.itemPerPage))
+      this.state.totalItem = smallCompte.length
+    }
+
+    console.log(this.comptes);
+  }
+
+  // Supprimer une ligne de tableau par son id
+ supprimerLigneParId(id : any) {
+  var row = document.getElementById(id);
+  if (row) {
+    row.parentNode?.removeChild(row);
+  }
+}
+
+
+///alert
+msgAlert(type: any,  title : any) {
+  Swal.fire({
+    position: 'center',
+    icon: type,
+    title: title,
+    showConfirmButton: false,
+    showCancelButton: true,
+    timer: 2500,
+  });
+}
 }

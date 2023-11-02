@@ -47,12 +47,22 @@ export class TopbarComponent {
   newNotify: number = 0;
   readNotify: number = 0;
 
+  storedData = localStorage.getItem('currentUser');
+  user: any;
+
+    
+
+
   constructor(@Inject(DOCUMENT) private document: any,
     private eventService: EventService,
     public languageService: LanguageService,
     private authService: AuthenticationService,
     private router: Router,
-    public _cookiesService: CookieService) { }
+    public _cookiesService: CookieService) {
+      if (this.storedData !== null) {
+        this.user = JSON.parse(this.storedData);
+      }
+     }
 
   ngOnInit(): void {
     this.element = document.documentElement;

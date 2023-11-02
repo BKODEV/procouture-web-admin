@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  defaultauth: 'fackbackend',
+  defaultauth: 'production',
   firebaseConfig: {
     apiKey: '',
     authDomain: '',
@@ -25,4 +25,3 @@ export const environment = {
  * on performance if an error is thrown.
  */
 // import 'zone.js/plugins/zone-error';  // Included with Angular CLI.
- 
