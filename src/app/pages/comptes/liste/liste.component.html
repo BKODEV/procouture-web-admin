@@ -131,7 +131,6 @@
             </div>
             
             <form [formGroup]="CompteFormGroup" class="tablelist-form" (submit)="submitSubscriptionForm()">
-                {{ CompteFormGroup.value | json }}
                 <div class="modal-body">
                     <input type="hidden" name="id" value="" formControlName="compte" />
 

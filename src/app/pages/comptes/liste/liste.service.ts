@@ -1,14 +1,11 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, catchError, throwError } from 'rxjs';
-import { GlobalComponent } from 'src/app/global-component';
 import { Compte } from './liste.model';
-import { ResponseHttp } from 'src/app/interfaces/response';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
+import { GlobalService } from 'src/app/core/services/global-service';
 
-
-const COMPTE_URL = GlobalComponent.API_URL + "/admin/comptes"
 
 @Injectable({
   providedIn: 'root'
@@ -17,13 +14,16 @@ const COMPTE_URL = GlobalComponent.API_URL + "/admin/comptes"
 export class ListeService {
   private compteListSubject = new BehaviorSubject<any[]>([]);
   compteList$: Observable<any[]> = this.compteListSubject.asObservable();
+  constructor(private http: HttpClient, private router : Router, private global : GlobalService) {}
 
-  constructor(private http: HttpClient, private router : Router) {}
+  COMPTE_URL = this.global.getApiUrl() + "/admin/comptes"
 
   fetchComptesList(): void {
-    this.http.get<any>(COMPTE_URL, { ...GlobalComponent.httpOptionWithAuth, observe: 'response' })
+    const httpOptions = { headers: this.global.getHeaders() };
+    this.http.get<any>(this.COMPTE_URL, {...httpOptions, observe : 'response'})
       .pipe(
         catchError((error: HttpErrorResponse) => {
+          console.error(error);
           if(error.status === 401){
             localStorage.clear()
             this.router.navigate(['/auth/login'])
@@ -40,7 +40,8 @@ export class ListeService {
 
 
   deleteCompte(id : number){
-    return this.http.post<any>(COMPTE_URL + '/' +  id,{'_method' : 'DELETE'},{...GlobalComponent.httpOptionWithAuth, observe : 'response'})
+    const httpOptions = { headers: this.global.getHeaders() };
+    return this.http.post<any>(this.COMPTE_URL + '/' +  id,{'_method' : 'DELETE'}, {...httpOptions,  observe : 'response'})
     .pipe(
       catchError((error: HttpErrorResponse) => {
         if(error.status === 401){

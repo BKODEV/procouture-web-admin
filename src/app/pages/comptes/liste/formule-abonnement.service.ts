@@ -1,12 +1,11 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
-import { GlobalComponent } from 'src/app/global-component';
+import { GlobalService } from 'src/app/core/services/global-service';
 import Swal from 'sweetalert2';
 
 
-const FORMULE_URL = GlobalComponent.API_URL + "/abonnement/offres"
-const ABONNEMENT_URL = GlobalComponent.API_URL + "/abonnements"
+
 
 
 @Injectable({
@@ -14,10 +13,16 @@ const ABONNEMENT_URL = GlobalComponent.API_URL + "/abonnements"
 })
 export class FormuleAbonnementService {
 
-  constructor(private http : HttpClient) { }
+  constructor(private http : HttpClient, private global : GlobalService) { }
+
+
+  FORMULE_URL = this.global.getApiUrl() + "/abonnement/offres"
+  ABONNEMENT_URL = this.global.getApiUrl() + "/abonnements"
+
 
   getSubscriptionFormule(){
-    return this.http.get<any>(FORMULE_URL,{...GlobalComponent.httpOptionWithAuth, observe : 'response'}).pipe(
+    const httpOptions = { headers: this.global.getHeaders() };
+    return this.http.get<any>(this.FORMULE_URL, { ...httpOptions, observe: 'response' }).pipe(
       catchError((error: HttpErrorResponse) => {
         return throwError(error);
       })
@@ -26,7 +31,8 @@ export class FormuleAbonnementService {
 
 
   addSubscription(data : any){
-    return this.http.post<any>(ABONNEMENT_URL,{compte : data.compte, formule : data.formule }, {...GlobalComponent.httpOptionWithAuth, observe : 'response'}).pipe(
+    const httpOptions = { headers: this.global.getHeaders() };
+    return this.http.post<any>(this.ABONNEMENT_URL,{compte : data.compte, formule : data.formule },  { ...httpOptions, observe: 'response' }).pipe(
       catchError((error : HttpErrorResponse) => {
         this.msgAlert()
           return throwError(error)

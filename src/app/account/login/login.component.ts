@@ -38,11 +38,11 @@ export class LoginComponent {
       this.router.navigate(['/']);
     }
     /**
-     * Form Validatyion
+     * Form Validation
      */
     this.loginForm = this.formBuilder.group({
-      username: ['username', [Validators.required]],
-      password: ['123456', [Validators.required]],
+      username: ['', [Validators.required]],
+      password: ['', [Validators.required]],
     });
     // get return url from route parameters or default to '/'
     // this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';

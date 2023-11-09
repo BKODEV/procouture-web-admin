@@ -4,11 +4,9 @@ import { User } from '../models/auth.models';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { catchError, map } from 'rxjs/operators';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { GlobalComponent } from "../../global-component";
+import { GlobalService } from './global-service';
 
-const AUTH_API = GlobalComponent.AUTH_API;
 
-const httpOptions = GlobalComponent.httpOption;
   
 
 @Injectable({ providedIn: 'root' })
@@ -17,14 +15,14 @@ const httpOptions = GlobalComponent.httpOption;
  * Auth-service Component
  */
 export class AuthenticationService {
-
+    AUTH_API = this.global.getApiUrl() + '/admin/login'
     user!: User;
     currentUserValue: any;
 
     private currentUserSubject: BehaviorSubject<User>;
     // public currentUser: Observable<User>;
 
-    constructor(private http: HttpClient) {
+    constructor(private http: HttpClient, private global : GlobalService) {
         this.currentUserSubject = new BehaviorSubject<User>(JSON.parse(localStorage.getItem('currentUser')!));
         // this.currentUser = this.currentUserSubject.asObservable();
      }
@@ -41,11 +39,11 @@ export class AuthenticationService {
         // });
 
         // Register Api
-        return this.http.post(AUTH_API + 'signup', {
+        return this.http.post(this.global.getApiUrl() + 'signup', {
             email,
             first_name,
             password,
-          }, httpOptions);
+          }, {...this.global.getHeaders});
     }
 
     /**
@@ -54,12 +52,13 @@ export class AuthenticationService {
      * @param password password of user
      */
     login(username: string, password: string, role = "web") {
+        const httpOptions = { headers: this.global.getHeaders() };
         // return getFirebaseBackend()!.loginUser(email, password).then((response: any) => {
         //     const user = response;
         //     return user;
         // });
 
-        return this.http.post(AUTH_API, {
+        return this.http.post(this.AUTH_API, {
             username,
             password,
             role

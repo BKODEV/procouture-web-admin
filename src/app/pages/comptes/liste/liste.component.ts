@@ -94,7 +94,6 @@ export class ListeComponent implements OnInit {
       })
       this.comptes = smallCompte.slice(startItem,endItem)
       this.state.totalItem = smallCompte.length
-      console.log(this.comptes);
     }
       // this.comptes = this.AllComptes.slice(startItem, endItem);
       // this.state.totalItem = this.AllComptes.length; // Mettez à jour totalItem
@@ -173,7 +172,6 @@ export class ListeComponent implements OnInit {
 
   initialiseFormAbonnementData(index : number, formule : any){
     this.CompteFormGroupSubmited = false
-    console.log(this.CompteFormGroupSubmited);
     this.selectedFormuleOptionIndex = index
     this.CompteFormGroup.get('formule')?.setValue(formule)
   }
@@ -202,7 +200,6 @@ export class ListeComponent implements OnInit {
       this.comptes = this.AllComptes.slice(0,(this.state.itemPerPage))
       this.state.totalItem = this.AllComptes.length; // Mettez à jour totalItem
     }else {
-      console.log(JSON.parse(this.selectedStatus));
       this.paginationCurrentPage = 1
       var smallCompte = this.AllComptes.filter( (abonnement_item) => {
         return abonnement_item.abonnement_status === JSON.parse(this.selectedStatus);
@@ -233,7 +230,7 @@ export class ListeComponent implements OnInit {
         return false;
     });
   }
-
+  //Filtre a la saisie
   digitFilter(){
     var elements = this.searchObjects(this.AllComptes, this.searchQuery);
     if(this.selectedStatus === ""){
@@ -249,7 +246,6 @@ export class ListeComponent implements OnInit {
       this.state.totalItem = smallCompte.length
     }
 
-    console.log(this.comptes);
   }
 
   // Supprimer une ligne de tableau par son id
@@ -272,4 +268,6 @@ msgAlert(type: any,  title : any) {
     timer: 2500,
   });
 }
+
+
 }
